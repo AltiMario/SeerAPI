@@ -1,0 +1,22 @@
+# -*- restclient -*-
+
+#
+# test function
+#
+GET http://localhost:9090/test
+
+
+#
+# post some test data, not enough for processing
+#
+POST http://localhost:9090/v1/forecasts
+ContentType: text/csv
+
+1,1
+2,2
+3,3
+
+#
+# check job status
+#
+GET http://localhost:9090/v1/forecasts/10519d57-0155-4a7d-b8e5-69233336ffbb

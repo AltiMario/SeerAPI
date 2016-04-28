@@ -1,0 +1,4 @@
+{:db        {:host "localhost" :db-name "seer-api"}
+ :seer      {:path "/home/altimario/seer/tmp/"
+             :core "/home/altimario/seer/seerCore"}
+ :server    {:port 9090}}
