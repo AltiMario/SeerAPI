@@ -19,13 +19,6 @@
       {:status "ERROR"
        :reason (str "Can't update the elaboration status: " (.getMessage e))})))
 
-;upsert
-(comment
-  {:id     "dddd"
-   :status "perocessing"
-   :log    [{:timestamp 1 :action "created"}
-            {:timestamp 2 :action "validated"}]}
-  )
 
 (defn find-user-by-job-id [job-id db]
   (mc/find-map-by-id db "elaborations" job-id))

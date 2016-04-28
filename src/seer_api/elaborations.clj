@@ -8,8 +8,8 @@
 (defn calc-processing-eta [job-id base-path core-path]
   (let [eta (sh core-path "temp.csv" "10" "ETA" :dir (str base-path job-id))]
     (if (.contains (:out eta) "ERROR")
-      {:status "ERROR" :reason "ETA calculation issue" :details (clojure.string/trim-newline(:out eta))}
-      {:status "ETA calculated" :eta (clojure.string/trim-newline(:out eta))})))
+      {:status "ERROR" :reason "ETA calculation issue" :details (clojure.string/trim-newline (:out eta))}
+      {:status "ETA calculated" :eta (clojure.string/trim-newline (:out eta))})))
 
 (comment
   (calc-processing-eta "76dc0ded-e902-4db3-92df-48376980e95f" "/home/altimario/seer/temp/" "/home/altimario/seer/seerCore")
@@ -36,7 +36,7 @@
         (db/update-job-status db job-id (calc-processing-eta job-id base-path core-path))
         (db/update-job-status db job-id {:status "processing"})
         (let [result (forecast job-id base-path core-path)]
-            (db/update-job-status db job-id result))))))
+          (db/update-job-status db job-id result))))))
 
 (comment
   (start-background-processing "a08a2da7-7374-467f-8705-5d9e1e7771f9" db "/home/altimario/seer/temp/" "/home/altimario/seer/seerCore")
