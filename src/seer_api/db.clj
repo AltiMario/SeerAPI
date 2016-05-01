@@ -1,27 +1,31 @@
 (ns seer-api.db
   (:require [monger.collection :as mc]
             [monger.core :as mg]
-            [monger.operators :refer :all]))
+            [monger.operators :refer :all]
+            [clojure.tools.logging :as log]))
 
 
-(defn store-job-status [job-id db]
+(defn store-job-status [job-id db collection]
   (try
-    (mc/insert db "elaborations" {:_id job-id :status "new" :last-update (new java.util.Date)})
+    (mc/insert db collection {:_id job-id :status "new" :last-update (new java.util.Date)})
     (catch Exception e
-      {:status "ERROR"
-       :reason (str "Can't add the elaboration status: " (.getMessage e))})))
+      (throw
+        (ex-info "Can't create new job"
+                 {:status "ERROR"
+                  :reason (.getMessage e)
+                  :job-id job-id})))))
 
 
-(defn update-job-status [db job-id status]
+(defn update-job-status [db collection job-id status]
   (try
-    (mc/update-by-id db "elaborations" job-id {$set (merge status {:last-update (new java.util.Date)})})
+    (mc/update-by-id db collection job-id {$set (merge status {:last-update (new java.util.Date)})})
     (catch Exception e
       {:status "ERROR"
        :reason (str "Can't update the elaboration status: " (.getMessage e))})))
 
 
-(defn find-user-by-job-id [job-id db]
-  (mc/find-map-by-id db "elaborations" job-id))
+(defn find-user-by-job-id [job-id db collection]
+  (mc/find-map-by-id db collection job-id))
 
 
 (defn start-connection [{:keys [host db-name] :as config}]

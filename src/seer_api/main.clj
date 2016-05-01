@@ -6,7 +6,7 @@
 
 
 (def default-config
-  {:db     {:host "localhost" :db-name "seer-api"}
+  {:db     {:host "localhost" :db-name "seer-api" :collection "elaborations"}
    :seer   {:path "/home/altimario/seer/temp/"
             :core "/home/altimario/seer/seerCore"}
    :server {:port 9090}})
