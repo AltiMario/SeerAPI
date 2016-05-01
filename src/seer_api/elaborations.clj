@@ -34,9 +34,9 @@
   (try
     (status-update-fn {:status (str "starting " step-descr)})
     (let [result (f)]
-      (status-update-fn (merge result {:status (str step-descr "completed")})))
+      (status-update-fn (merge result {:status (str step-descr " completed")})))
     (catch Exception x
-      (status-update-fn {:status "ERROR" :reason (str "Error during " step-descr)})
+      (status-update-fn {:status "ERROR" :reason (str " Error during " step-descr)})
       (throw x))))
 
 
@@ -56,6 +56,5 @@
 
 (comment
   (start-background-processing "a08a2da7-7374-467f-8705-5d9e1e7771f9" db "/home/altimario/seer/temp/" "/home/altimario/seer/seerCore")
-  )
-
-(processing-step identity "test" (fn [] {:eta (+ 1 1)}))
+  (processing-step identity "test" (fn [] {:eta (+ 1 1)}))
+)

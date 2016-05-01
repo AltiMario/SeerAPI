@@ -27,6 +27,17 @@
 (defn find-user-by-job-id [job-id db collection]
   (mc/find-map-by-id db collection job-id))
 
+(defn store-results [db collection job-id base-path]
+  (try
+    (let [resF (slurp (str base-path "/" job-id "/temp.csvF"))]
+      (mc/update-by-id db collection job-id {$set {:timeseries resF :last-update (new java.util.Date) :status "storing timeserie elaborated"}})
+      (let [resF2 (slurp (str base-path "/" job-id "/temp.csvF2"))]
+        (mc/update-by-id db collection job-id {$set {:forecasted resF2 :last-update (new java.util.Date) :status "storing data forecasted"}})
+        ))
+    (catch Exception e
+      {:status "ERROR"
+       :reason (str "Can't store the forecasted data: " (.getMessage e))})))
+
 
 (defn start-connection [{:keys [host db-name] :as config}]
   (let [conn (mg/connect {:host host})]
@@ -43,8 +54,7 @@
   (def db (-> @seer-api.core/conn-and-conf :db))
 
 
-  (store-job-status "z" db)
-  (update-job-status db "z" {:status "validate" :some-new-test 1})
+  ;(store-job-status "z" db)
+  ;(update-job-status db "z" {:status "validate" :some-new-test 1})
+  ;(store-results db "elaborations" "e0cd02e5-a144-4d04-88aa-1364e8165207" "/home/altimario/seer/temp/")
   )
-
-

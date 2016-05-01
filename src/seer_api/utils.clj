@@ -11,8 +11,7 @@
            (map (fn [^String s] (Long/parseLong s))))))
 
 
-(defn copy-input-to-location
-  [job-id input base-path]
+(defn copy-input-to-location [job-id input base-path]
   (try
     (let [file-path (str base-path "/" job-id)
           file-name (str file-path "/temp.csv")]
