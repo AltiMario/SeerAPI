@@ -44,7 +44,7 @@
           ))
 
     (GET "/forecasts/:job-id" [job-id]
-      (let [data (db/find-user-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
+      (let [data (db/find-all-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
         (if data
           {:status  200
            :headers {"Content-type" "application/json"}
@@ -53,7 +53,7 @@
            :body   "the job-id does not exist!\n"})))
 
     (GET "/forecasts/:job-id/result" [job-id]
-
+;;find-forecast-by-job-id 
       ))
 
   (route/not-found "Page not found\n"))

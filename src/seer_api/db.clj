@@ -2,7 +2,8 @@
   (:require [monger.collection :as mc]
             [monger.core :as mg]
             [monger.operators :refer :all]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [monger.conversion :refer [from-db-object]]))
 
 
 (defn store-job-status [job-id db collection]
@@ -24,8 +25,11 @@
        :reason (str "Can't update the elaboration status: " (.getMessage e))})))
 
 
-(defn find-user-by-job-id [job-id db collection]
+(defn find-all-by-job-id [job-id db collection]
   (mc/find-map-by-id db collection job-id))
+
+(defn find-forecast-by-job-id [job-id db collection]
+  (mc/find-maps db collection {:_id job-id},{:timeseries 0}))
 
 (defn store-results [db collection job-id base-path]
   (try
@@ -57,4 +61,6 @@
   ;(store-job-status "z" db)
   ;(update-job-status db "z" {:status "validate" :some-new-test 1})
   ;(store-results db "elaborations" "e0cd02e5-a144-4d04-88aa-1364e8165207" "/home/altimario/seer/temp/")
+  (mc/find-maps db "elaborations" {:_id "e0cd02e5-a144-4d04-88aa-1364e8165207"},{:timeseries 0})
+
   )
