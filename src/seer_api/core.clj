@@ -20,9 +20,8 @@
 ;;   - processing time series
 ;;   - store status for every step
 ;;   - store data forecasted
-;; GET  /forecasts/:job-id --> current status with ETA (TODO: currently it show everything)
-;; GET  /forecasts/:job-id/result --> output file (TODO: return just the forecasted values)
-;; GET  /forecasts/:job-id/result-details --> output file (TODO: return the forecasted values and additional info)
+;; GET  /forecasts/:job-id --> current status with ETA and data forecasted
+;; GET  /forecasts/:job-id/result-details --> return also the full timeseries analyzed
 ;;
 
 
@@ -35,16 +34,15 @@
             {seer-path :path seer-core :core} (get-in @conn-and-conf [:config :seer])
             collection (get-in @conn-and-conf [:config :db :collection])]
 
-          (db/store-job-status job-id (:db @conn-and-conf) collection)
-          (ut/copy-input-to-location job-id body seer-path)
-          (ela/start-background-processing job-id (:db @conn-and-conf) collection seer-path seer-core)
-          (db/store-results job-id (:db @conn-and-conf) collection seer-path)
-          {:status 202
-           :body   {:job-id job-id}}
-          ))
+        (db/store-job-status job-id (:db @conn-and-conf) collection)
+        (ut/copy-input-to-location job-id body seer-path)
+        (ela/start-background-processing job-id (:db @conn-and-conf) collection seer-path seer-core)
+        {:status 202
+         :body   {:job-id job-id}}
+        ))
 
     (GET "/forecasts/:job-id" [job-id]
-      (let [data (db/find-all-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
+      (let [data (db/find-forecast-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
         (if data
           {:status  200
            :headers {"Content-type" "application/json"}
@@ -52,10 +50,15 @@
           {:status 404
            :body   "the job-id does not exist!\n"})))
 
-    (GET "/forecasts/:job-id/result" [job-id]
-;;find-forecast-by-job-id 
-      ))
-
+    (GET "/forecasts/:job-id/result-details" [job-id]
+      (let [data (db/find-all-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
+        (if data
+          {:status  200
+           :headers {"Content-type" "application/json"}
+           :body    data}
+          {:status 404
+           :body   "the job-id does not exist!\n"})))
+    )
   (route/not-found "Page not found\n"))
 
 (comment

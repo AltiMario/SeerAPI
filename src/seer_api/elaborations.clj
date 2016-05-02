@@ -52,6 +52,10 @@
 
       (processing-step status-update-fn "calculating forecast"
                        (fn [] (forecast job-id base-path core-path) nil))
+
+      (processing-step status-update-fn "storing data forecasted"
+                       (fn [] (db/store-results job-id db collection base-path) nil))
+
       )))
 
 (comment
