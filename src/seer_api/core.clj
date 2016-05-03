@@ -20,8 +20,9 @@
 ;;   - processing time series
 ;;   - store status for every step
 ;;   - store data forecasted
-;; GET  /forecasts/:job-id --> current status with ETA and data forecasted
-;; GET  /forecasts/:job-id/result-details --> return also the full timeseries analyzed
+;; GET  /forecasts/:job-id --> current status with ETA
+;; GET  /forecasts/:job-id/result --> return the forecasted values
+;; GET  /forecasts/:job-id/elaboration-details --> return also the full timeseries analyzed
 ;;
 
 
@@ -42,7 +43,8 @@
         ))
 
     (GET "/forecasts/:job-id" [job-id]
-      (let [data (db/find-forecast-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
+      (let [data (db/find-status-by-job-id job-id (:db @conn-and-conf)
+                                           (get-in @conn-and-conf [:config :db :collection]))]
         (if data
           {:status  200
            :headers {"Content-type" "application/json"}
@@ -50,8 +52,19 @@
           {:status 404
            :body   "the job-id does not exist!\n"})))
 
-    (GET "/forecasts/:job-id/result-details" [job-id]
-      (let [data (db/find-all-by-job-id job-id (:db @conn-and-conf) (get-in @conn-and-conf [:config :db :collection]))]
+    (GET "/forecasts/:job-id/result" [job-id]
+      (let [data (db/find-forecast-by-job-id job-id (:db @conn-and-conf)
+                                             (get-in @conn-and-conf [:config :db :collection]))]
+        (if data
+          {:status  200
+           :headers {"Content-type" "application/json"}
+           :body    data}
+          {:status 404
+           :body   "the job-id does not exist!\n"})))
+
+    (GET "/forecasts/:job-id/elaboration-details" [job-id]
+      (let [data (db/find-elaboration-by-job-id job-id (:db @conn-and-conf)
+                                                (get-in @conn-and-conf [:config :db :collection]))]
         (if data
           {:status  200
            :headers {"Content-type" "application/json"}

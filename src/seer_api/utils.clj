@@ -1,14 +1,13 @@
 (ns seer-api.utils
-  (:require [clojure.java.io :as io]
-            [seer-api.db :as db]))
+  (:require [clojure.java.io :as io]))
 
 
 (defn validate-csv [job-id base-path]
-    (doall
-      (->> (str base-path "/" job-id "/temp.csv")
-           slurp
-           (re-seq #"[^,\n\r]+")
-           (map (fn [^String s] (Long/parseLong s))))))
+  (doall
+    (->> (str base-path "/" job-id "/temp.csv")
+         slurp
+         (re-seq #"[^,\n\r]+")
+         (map (fn [^String s] (Long/parseLong s))))))
 
 
 (defn copy-input-to-location [job-id input base-path]

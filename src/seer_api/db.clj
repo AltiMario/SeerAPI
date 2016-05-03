@@ -26,21 +26,22 @@
 
 (defn store-results [job-id db collection base-path]
   (try
-    (let [resF (slurp (str base-path "/" job-id "/temp.csvF"))]
-      (mc/update-by-id db collection job-id {$set {:timeseries resF}})
-      (let [resF2 (slurp (str base-path "/" job-id "/temp.csvF2"))]
-        (mc/update-by-id db collection job-id {$set {:forecasted resF2}})
-        ))
+    (let [resF (slurp (str base-path "/" job-id "/temp.csvF"))
+          resF2 (slurp (str base-path "/" job-id "/temp.csvF2"))]
+      (mc/update-by-id db collection job-id {$set {:timeseries resF :forecasted resF2}}))
     (catch Exception e
       (throw
         (ex-info "Can't store the forecasted data"
                  {:status "ERROR" :reason (.getMessage e)})))))
 
-(defn find-all-by-job-id [job-id db collection]
-  (mc/find-map-by-id db collection job-id))
+(defn find-elaboration-by-job-id [job-id db collection]
+  (get (mc/find-one-as-map db collection {:_id job-id} ["timeseries"]) :timeseries))
 
 (defn find-forecast-by-job-id [job-id db collection]
-  (mc/find-maps db collection {:_id job-id}, {:timeseries 0}))
+  (get (mc/find-one-as-map db collection {:_id job-id} ["forecasted"]) :forecasted))
+
+(defn find-status-by-job-id [job-id db collection]
+  (mc/find-map-by-id db collection job-id {:timeseries 0 :forecasted 0}))
 
 (defn start-connection [{:keys [host db-name] :as config}]
   (let [conn (mg/connect {:host host})]
