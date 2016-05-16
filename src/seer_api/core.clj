@@ -1,14 +1,14 @@
 (ns seer-api.core
   (:require [org.httpkit.server :as http])
-  (:require [seer-api.elaborations :as ela])
+  (:require [clojure.tools.logging :as log])
   (:require [compojure.core :refer :all]
-            [compojure.route :as route]
-            [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
+            [compojure.route :as route])
+  (:require [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-            [seer-api.utils :as ut]
-            [seer-api.db :as db])
-  (:require [clojure.tools.logging :as log]))
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]])
+  (:require [seer-api.utils :as ut]
+            [seer-api.db :as db]
+            [seer-api.elaborations :as ela]))
 
 (defonce conn-and-conf (atom nil))
 
@@ -32,61 +32,59 @@
   site
   (context "/v1" []
 
-           (POST "/forecasts" {body :body :as r}
-                 (let [job-id (.toString (java.util.UUID/randomUUID))
-                       {seer-path :path seer-core :core} (get-in @conn-and-conf [:config :seer])
-                       collection (get-in @conn-and-conf [:config :db :collection])
-                       input-file (or (get-in r [:params "file" :tempfile]) body)]
+    (POST "/forecasts" {body :body :as r}
+      (let [job-id (.toString (java.util.UUID/randomUUID))
+            {seer-path :path seer-core :core} (get-in @conn-and-conf [:config :seer])
+            collection (get-in @conn-and-conf [:config :db :collection])
+            input-file (or (get-in r [:params "file" :tempfile]) body)]
 
-                   (db/store-job-status job-id (:db @conn-and-conf) collection)
-                   (ut/copy-input-to-location job-id input-file seer-path)
-                   (ela/start-background-processing job-id (:db @conn-and-conf) collection seer-path seer-core)
-                   {:status 202
-                    :body   {:job-id job-id}}
-                   ))
+        (db/store-job-status job-id (:db @conn-and-conf) collection)
+        (ut/copy-input-to-location job-id input-file seer-path)
+        (ela/start-background-processing job-id (:db @conn-and-conf) collection seer-path seer-core)
+        {:status 202
+         :body   {:job-id job-id}}
+        ))
 
-           (GET "/forecasts/:job-id" [job-id]
-                (let [data (db/find-status-by-job-id job-id (:db @conn-and-conf)
-                                                     (get-in @conn-and-conf [:config :db :collection]))]
-                  (if data
-                    {:status  200
-                     :headers {"Content-type" "application/json"}
-                     :body    data}
-                    {:status 404
-                     :body   "the job-id does not exist!\n"})))
+    (GET "/forecasts/:job-id" [job-id]
+      (let [data (db/find-status-by-job-id job-id (:db @conn-and-conf)
+                                           (get-in @conn-and-conf [:config :db :collection]))]
+        (if data
+          {:status  200
+           :headers {"Content-type" "application/json"}
+           :body    data}
+          {:status 404
+           :body   "the job-id does not exist!\n"})))
 
-           (GET "/forecasts/:job-id/result" [job-id]
-                (let [data (db/find-forecast-by-job-id job-id (:db @conn-and-conf)
-                                                       (get-in @conn-and-conf [:config :db :collection]))]
-                  (if data
-                    {:status  200
-                     :headers {"Content-type" "application/json"}
-                     :body    data}
-                    {:status 404
-                     :body   "the job-id does not exist!\n"})))
+    (GET "/forecasts/:job-id/result" [job-id]
+      (let [data (db/find-forecast-by-job-id job-id (:db @conn-and-conf)
+                                             (get-in @conn-and-conf [:config :db :collection]))]
+        (if data
+          {:status  200
+           :headers {"Content-type" "application/json"}
+           :body    data}
+          {:status 404
+           :body   "the job-id does not exist!\n"})))
 
-           (GET "/forecasts/:job-id/elaboration-details" [job-id]
-                (let [data (db/find-elaboration-by-job-id job-id (:db @conn-and-conf)
-                                                          (get-in @conn-and-conf [:config :db :collection]))]
-                  (if data
-                    {:status  200
-                     :headers {"Content-type" "application/json"}
-                     :body    data}
-                    {:status 404
-                     :body   "the job-id does not exist!\n"})))
-           )
+    (GET "/forecasts/:job-id/elaboration-details" [job-id]
+      (let [data (db/find-elaboration-by-job-id job-id (:db @conn-and-conf)
+                                                (get-in @conn-and-conf [:config :db :collection]))]
+        (if data
+          {:status  200
+           :headers {"Content-type" "application/json"}
+           :body    data}
+          {:status 404
+           :body   "the job-id does not exist!\n"})))
+    )
   (route/not-found "Page not found\n"))
 
 (comment
-  (def conn-and-conf-aus (atom {:config {:db {:host "localhost", :db-name "seer-api", :collection "elaborations"}}
-                                :seer   {:path "foo/path" :core "foo/core"}}))
-  (-> @conn-and-conf-aus
-      :config
-      :seer
-      :path)
+  (def conn-and-conf-aus (atom {:config                  {:db {:host "localhost", :db-name "seer-api", :collection "elaborations"}}
+                                :seer                    {:path "foo/path" :core "foo/core"}
+                                :local-access-limitation false}))
 
   (get-in @conn-and-conf-aus [:config :seer])
   (get-in @conn-and-conf-aus [:config :db :collection])
+  (get-in @conn-and-conf [:config :local-access-limitation])
   )
 
 
@@ -95,13 +93,7 @@
     (try
       (handler req)
       (catch Exception x
-        (let [error-id (str "ERR-" (.toString (java.util.UUID/randomUUID)))]
-          (log/error x (str "Exception number: " error-id))
-          {:status  503
-           :headers {"Content-Type" "application/json"}
-           :body    {:status   "ERROR"
-                     :message  "The operation couldn't be completed due to an internal error."
-                     :error-id error-id}})))))
+        (ut/error-manager x "The operation couldn't be completed due to an internal error.")))))
 
 
 (defn print-request [handler]
@@ -122,5 +114,5 @@
 
 
 (defn start-server [{:keys [port]}]
-  (println "Starting server on port:" port)
+  (log/info "Starting server on port:" port)
   (http/run-server #'app {:port port}))

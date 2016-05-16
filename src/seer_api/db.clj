@@ -3,7 +3,8 @@
             [monger.core :as mg]
             [monger.operators :refer :all]
             [clojure.tools.logging :as log]
-            [monger.conversion :refer [from-db-object]]))
+            [monger.conversion :refer [from-db-object]]
+            [seer-api.utils :as ut]))
 
 
 (defn store-job-status [job-id db collection]
@@ -12,7 +13,7 @@
     (catch Exception e
       (throw
         (ex-info "Can't create new job"
-                 {:status "ERROR" :reason (.getMessage e) :job-id job-id})))))
+                 (ut/error-manager e (str "ERROR creation job:" job-id)))))))
 
 
 (defn update-job-status [db collection job-id status]
@@ -20,8 +21,8 @@
     (mc/update-by-id db collection job-id {$set (merge status {:last-update (new java.util.Date)})})
     (catch Exception e
       (throw
-        (ex-info "Can't update the elaboration status:"
-                 {:status "ERROR" :reason (.getMessage e)})))))
+        (ex-info "Can't update the elaboration status"
+                 (ut/error-manager e "ERROR status update"))))))
 
 
 (defn store-results [job-id db collection base-path]
@@ -32,7 +33,7 @@
     (catch Exception e
       (throw
         (ex-info "Can't store the forecasted data"
-                 {:status "ERROR" :reason (.getMessage e)})))))
+                 (ut/error-manager e "ERROR store result"))))))
 
 (defn find-elaboration-by-job-id [job-id db collection]
   (get (mc/find-one-as-map db collection {:_id job-id} ["timeseries"]) :timeseries))

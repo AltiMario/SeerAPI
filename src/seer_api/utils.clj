@@ -1,5 +1,7 @@
 (ns seer-api.utils
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]))
 
 
 (defn validate-csv [job-id base-path]
@@ -23,3 +25,11 @@
                  {:job-id job-id :to-path base-path
                   :reason (.getMessage e)}
                  e)))))
+
+(defn error-manager [x message]
+  (let [error-id (str "ERR-" (.toString (java.util.UUID/randomUUID)))]
+    (log/error x (str "Exception number: " error-id))
+    {:status   "ERROR"
+     :message  message
+     :reason   (.getMessage x)
+     :error-id error-id}))

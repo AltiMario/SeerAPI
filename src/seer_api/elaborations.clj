@@ -7,9 +7,8 @@
 (defn calc-processing-eta [job-id base-path core-path]
   (let [eta (sh core-path "temp.csv" "10" "ETA" :dir (str base-path job-id))]
     (if (.contains (:out eta) "ERROR")
-      (throw (ex-info "Error while calculating ETA"
-                      {:status  "ERROR" :reason "ETA calculation issue"
-                       :details (clojure.string/trim-newline (:out eta))}))
+      (throw (ex-info (clojure.string/trim-newline (:out eta))
+                      {:status  "ERROR" :reason "ETA calculation issue"}))
       {:eta (clojure.string/trim-newline (:out eta))})))
 
 (comment
@@ -20,9 +19,8 @@
 (defn forecast [job-id base-path core-path]
   (let [res (sh core-path "temp.csv" "10" :dir (str base-path job-id))]
     (if (.contains (:out res) "ERROR")
-      (throw (ex-info "Error while computing forecasts"
-                      {:status  "failed" :reason "forecasting error"
-                       :details (clojure.string/trim-newline (:out res))}))
+      (throw (ex-info (clojure.string/trim-newline (:out res))
+                      {:status  "failed" :reason "forecasting elaboration issue"}))
       {:status "completed"})))
 
 (comment
@@ -36,7 +34,7 @@
     (let [result (f)]
       (status-update-fn (merge result {:status (str step-descr " completed")})))
     (catch Exception x
-      (status-update-fn {:status "ERROR" :reason (str " Error during " step-descr)})
+      (status-update-fn (ut/error-manager x (str "Error during " step-descr)))
       (throw x))))
 
 
