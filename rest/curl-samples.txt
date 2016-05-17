@@ -8,3 +8,6 @@ curl -i -H "Content-type: text/csv" \
 # Multi-part upload
 curl -i -XPOST http://localhost:9090/v1/forecasts \
     -F "file=@/home/altimario/clojure-prj/seer-api/test/tseries.csv"
+
+
+watch -d -n1 curl -s -i http://localhost:9090/v1/forecasts/c2095901-fa56-4398-8bf8-7618d9347d6b

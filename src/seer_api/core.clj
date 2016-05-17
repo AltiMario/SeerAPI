@@ -74,6 +74,10 @@
            :body    data}
           {:status 404
            :body   "the job-id does not exist!\n"})))
+
+
+    (GET "health-check" []
+      {:status 200 :body "ok"})
     )
   (route/not-found "Page not found\n"))
 

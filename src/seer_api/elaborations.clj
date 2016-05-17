@@ -45,13 +45,13 @@
       (processing-step status-update-fn "validation"
                        (fn [] (ut/validate-csv job-id base-path) nil))
 
-      (processing-step status-update-fn "calculating ETA"
+      (processing-step status-update-fn "calculating-eta"
                        (fn [] (calc-processing-eta job-id base-path core-path)))
 
-      (processing-step status-update-fn "calculating forecast"
+      (processing-step status-update-fn "forecasting"
                        (fn [] (forecast job-id base-path core-path) nil))
 
-      (processing-step status-update-fn "storing data forecasted"
+      (processing-step status-update-fn "completed"
                        (fn [] (db/store-results job-id db collection base-path) nil))
 
       )))
