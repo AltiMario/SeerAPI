@@ -1,0 +1,10 @@
+
+
+# text in body of request
+curl -i -H "Content-type: text/csv" \
+    -XPOST http://localhost:9090/v1/forecasts \
+    --data-binary @/home/altimario/clojure-prj/seer-api/test/tseries.csv 
+
+# Multi-part upload
+curl -i -XPOST http://localhost:9090/v1/forecasts \
+    -F "file=@/home/altimario/clojure-prj/seer-api/test/tseries.csv"

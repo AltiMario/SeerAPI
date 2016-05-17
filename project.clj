@@ -13,7 +13,7 @@
                  [ring/ring-defaults "0.2.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  ]
-  :profiles {:uberjar {:aot :all}
+  :profiles {:uberjar {:aot :all :uberjar-name "seer-api-standalone.jar"}
              :dev     {:plugins [[lein-binplus "0.4.1"]]}}
   :bin {:name "seer-api"}
   )

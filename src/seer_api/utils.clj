@@ -3,6 +3,14 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
+(defn error-manager [x message]
+  (let [error-id (str "ERR-" (.toString (java.util.UUID/randomUUID)))]
+    (log/error x (str "Exception number: " error-id))
+    {:status   "ERROR"
+     :message  message
+     :reason   (.getMessage x)
+     :error-id error-id}))
+
 
 (defn validate-csv [job-id base-path]
   (doall
@@ -22,14 +30,5 @@
     (catch Exception e
       (throw
         (ex-info "Error copying input data"
-                 {:job-id job-id :to-path base-path
-                  :reason (.getMessage e)}
-                 e)))))
+                 (error-manager e (str "job-id:" job-id " to-path" base-path)))))))
 
-(defn error-manager [x message]
-  (let [error-id (str "ERR-" (.toString (java.util.UUID/randomUUID)))]
-    (log/error x (str "Exception number: " error-id))
-    {:status   "ERROR"
-     :message  message
-     :reason   (.getMessage x)
-     :error-id error-id}))

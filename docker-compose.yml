@@ -1,0 +1,17 @@
+version: '2'
+services:
+  web:
+    image: altimario/seer-api:0.1.0
+    restart: always
+    ports:
+     - 80:9090
+    volumes:
+     - ./data/temp:/opt/seer/temp
+    links:
+     - mongo
+
+  mongo:
+    image: mongo
+    restart: always
+    volumes:
+     - ./data/mongo:/data/db
